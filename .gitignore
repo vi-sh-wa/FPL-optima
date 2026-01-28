@@ -1,0 +1,12 @@
+# Sensitive Data 
+.env
+
+# Python junk (compiled files that make your repo messy)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments 
+venv/
+env/
+ENV/
