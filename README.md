@@ -1,9 +1,9 @@
-
-# 🚧 Work In Progress 🚧
-
-![Work in Progress](https://img.shields.io/badge/status-work%20in%20progress-orange)
-
-> **Note:** This project is currently under heavy development. Expect breaking changes, incomplete documentation, and the occasional digital fire.
+<div align="center">
+  <img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExemFvM3g5aDhxa2twdXF6OGR6N2hkc2R4Z3V5YnJyejU3NnptaTMyciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Yj2nHhbGsNQSrGyvI7/giphy.gif" width="300" />
+  
+  ## 🚧 Work In Progress 🚧
+  > **Note: This project is under development. Expect breaking changes, incomplete documentation, and the occasional digital fire.**
+</div>
 
 # FantasyPremierLeague
 Hello!! This is my first project where I am parallely working on Github.
