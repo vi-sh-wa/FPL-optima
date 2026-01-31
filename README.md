@@ -61,7 +61,9 @@ Hello!! This is my first project where I am parallely working on Github. Everybo
 
 ---
 
-## Design Philosophy_v1: Why I’m Moving Beyond Standard FDR
+## Design Philosophy (v2): 
+
+## Why I’m Moving Beyond Standard FDR
 
 When I started this project, I realized that relying on the official FPL Fixture Difficulty Rating (FDR) felt like using a simple tool for a complex task. Here is why I decided to modify my approach:
 
@@ -88,4 +90,4 @@ I chose to combine Machine Learning with Rule-Based Logic Math because I believe
 ---
 
 ## ⚠️ Disclaimer
-**Note:** This roadmap is subject to change based on sudden injuries, unexpected VAR decisions, and the general "Bald Fraudulence" of Premier League managers. Use these predictions at your own risk; the creator is not responsible for any broken keyboards or triple-captain disasters.
+**Note:** This roadmap is subject to change based on sudden injuries, unexpected VAR decisions, and managers being sacked in the morning. Use these predictions at your own risk; the creator is not responsible for any broken keyboards or triple-captain disasters.
