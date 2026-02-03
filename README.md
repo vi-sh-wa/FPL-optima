@@ -25,7 +25,8 @@ Hello!! This is my first project where I am parallely working on Github. Everybo
 
 - [x] **Scribbler Validation (Whiteboard Phase):** Prototypes of all logic in Jupyter Notebooks to verify "Manager Logic" before script formalization.
 
-- [ ] **Cloud Provisioning:** Establish an AWS RDS (PostgreSQL) instance and secure the ETL pipeline for automated weekly data migration.
+- [x] **Cloud Provisioning:** BigQuery Data Lake: Create a BigQuery dataset and ingest historical FPL data for long-term analytics.
+
 
 ### Phase 2: From Static Fixture Difficulty Rating (FDR) to Dynamic Modifiers
 
