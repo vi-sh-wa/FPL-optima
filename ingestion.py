@@ -15,7 +15,7 @@ def ingest_season_data(seasons):
     )
 
     for s in seasons:
-        url = f"https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/{s}/merged_gw.csv"
+        url = f"https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/{s}/gws/merged_gw.csv"
         print(f"--- Processing Season: {s} ---")
         
         try:
