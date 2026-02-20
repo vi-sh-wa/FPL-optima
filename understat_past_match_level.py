@@ -34,7 +34,7 @@ def main():
                 pbar.set_description(f"Scraping Player {p_id}") # Update the status bar with the current player ID
                 
                 with UnderstatClient() as understat:
-                    data = understat.player(player_id=p_id).get_match_data()
+                    data = understat.player(player=p_id).get_match_data()
                     
                     if data:
                         df = pd.DataFrame(data)
