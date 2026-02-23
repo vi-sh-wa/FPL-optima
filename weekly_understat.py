@@ -8,7 +8,7 @@ import pandas as pd
 from google.cloud import bigquery
 
 client = bigquery.Client()
-TABLE_ID = "fpl-optima.fpl_bronze.understat_past_match_level"
+TABLE_ID = "fpl-optima.fpl_bronze.understat"
 
 def main():
     # 1. Get the list of IDs currently in your FPL table
