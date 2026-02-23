@@ -6,7 +6,7 @@ from google.cloud import bigquery
 
 # CONFIG
 client = bigquery.Client()
-DEST_TABLE = "fpl-optima.fpl_bronze.understat_past_match_level"
+DEST_TABLE = "fpl-optima.fpl_bronze.understat"
 ID_MAP_URL = "https://raw.githubusercontent.com/ChrisMusson/FPL-ID-Map/main/Master.csv"
 
 BATCH_SIZE = 50  # Number of players to collect before uploading to BigQuery
