@@ -35,7 +35,7 @@ Hello!! This is my first project where I am parallely working on Github. Everybo
 
 - [x] **The Interaction Logic:** Calculate the Final Opportunity Score ($Player\_Power \times Opponent\_Multiplier$) to map quality against fixture vulnerability.
 
-- [ ] **Script Refactoring:** Transition "Whiteboard" notebook code into modular, generic .py files for AWS Lambda automation.
+- [x] **Script Refactoring:** Transition "Whiteboard" notebook code into modular, generic .py files for AWS Lambda automation.
 
 ### Phase 3: Predictive Modeling (The xP Engine)
 
