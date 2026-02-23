@@ -4,7 +4,7 @@ from google.cloud import bigquery
 client = bigquery.Client()
 
 def ingest_season_data(seasons):
-    table_id = "fpl-optima.fpl_bronze.past_season_data_raw"
+    table_id = "fpl-optima.fpl_bronze.fpl"
 
     job_config = bigquery.LoadJobConfig(
         schema_update_options=[
