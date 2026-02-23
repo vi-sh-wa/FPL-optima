@@ -13,12 +13,25 @@ def main():
 
     boot_url = "https://fantasy.premierleague.com/api/bootstrap-static/"
     boot_data = requests.get(boot_url).json()
-    players_meta = pd.DataFrame(boot_data['elements'])[['id', 'first_name', 'second_name']]
-    players_meta['full_name'] = players_meta['first_name'] + "_" + players_meta['second_name']
-    name_map = dict(zip(players_meta['id'], players_meta['full_name']))
+
+    teams_df = pd.DataFrame(boot_data['teams'])
+    team_map = dict(zip(teams_df['id'], teams_df['name']))
+
+    pos_map = {1: 'GKP', 2: 'DEF', 3: 'MID', 4: 'FWD'}
+
+    players_df = pd.DataFrame(boot_data['elements'])
+    player_info = {}
+    for _, row in players_df.iterrows():
+        player_info[row['id']] = {
+            'name': f"{row['first_name']}_{row['second_name']}",
+            'team': team_map.get(row['team']),
+            'position': pos_map.get(row['element_type']),
+            'xP': row['ep_next'] 
+        }
 
     query = "SELECT DISTINCT id FROM `fpl-optima.fpl_bronze.current_epl_players`"
     active_ids = client.query(query).to_dataframe()['id'].tolist()
+
 
     last_gw_query = "SELECT MAX(gw) as last_gw FROM `fpl-optima.fpl_bronze.fpl` where season = '2025-26'"
     last_gw = client.query(last_gw_query).to_dataframe()['last_gw'].iloc[0]
@@ -27,6 +40,10 @@ def main():
     if pd.isna(last_gw):
         last_gw = 0
 
+    numeric_cols = ['expected_goals', 'expected_assists', 'expected_goal_involvements', 
+                    'expected_goals_conceded', 'value', 'selected', 'transfers_in','transfers_out', 
+                    'influence', 'creativity', 'threat', 'ict_index', 'xP']
+    
     all_new_rows = []
 
     for p_id in tqdm(active_ids):
@@ -37,13 +54,18 @@ def main():
                         data = r.json()
                         if 'history' in data and data['history']:
                             df = pd.DataFrame(data['history'])
-                            df['name'] = name_map.get(p_id) 
+                            df['name'] = player_info[p_id]['name']
+                            df['team'] = player_info[p_id]['team']
+                            df['position'] = player_info[p_id]['position']
+                            df['xP'] = player_info[p_id]['xP']
                             df['season'] = '2025/26'
                             
                             if 'round' in df.columns:
                                 df['gw'] = df['round'] 
 
                             df['player_id'] = p_id 
+                            
+                            df = df.astype({col: 'float64' for col in numeric_cols if col in df.columns})
                             
                             df = df[df['gw'] > last_gw]
                             
