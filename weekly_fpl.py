@@ -23,7 +23,6 @@ def main():
     player_info = {}
     for _, row in players_df.iterrows():
         player_info[row['id']] = {
-            'code': row['code'],
             'name': f"{row['first_name']}_{row['second_name']}",
             'team': team_map.get(row['team']),
             'position': pos_map.get(row['element_type']),
@@ -55,6 +54,7 @@ def main():
                         data = r.json()
                         if 'history' in data and data['history']:
                             df = pd.DataFrame(data['history'])
+                            df['code'] = player_info[p_id]['code']
                             df['name'] = player_info[p_id]['name']
                             df['team'] = player_info[p_id]['team']
                             df['position'] = player_info[p_id]['position']
