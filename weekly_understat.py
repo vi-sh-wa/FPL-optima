@@ -22,29 +22,29 @@ def main():
         last_date = '2025-08-01' 
 
     batch_dfs = []
-
-    for p_id in tqdm(active_ids, desc="Weekly Understat Update"):
-        try:
-            with UnderstatClient() as understat:
+    with UnderstatClient() as understat:
+        for p_id in tqdm(active_ids, desc="Weekly Understat Update"):
+            try:
+                
                 data = understat.player(player=p_id).get_match_data()
                 df = pd.DataFrame(data)
-                
+                    
                 df['date'] = pd.to_datetime(df['date'])
                 df = df[df['date'] > pd.to_datetime(last_date)]
-                
+                    
                 if not df.empty:
                     df['player_id'] = p_id
                     batch_dfs.append(df)
+                    
+                time.sleep(random.uniform(1.0, 2.0))
                 
-            time.sleep(random.uniform(1.0, 2.0))
-            
 
-            if len(batch_dfs) >= 50:
-                upload_to_bq(batch_dfs)
-                batch_dfs = []
-                
-        except Exception as e:
-            print(f"Error on {p_id}: {e}")
+                if len(batch_dfs) >= 50:
+                    upload_to_bq(batch_dfs)
+                    batch_dfs = []
+                    
+            except Exception as e:
+                print(f"Error on {p_id}: {e}")
 
 def upload_to_bq(dfs):
     final_df = pd.concat(dfs, ignore_index=True)
