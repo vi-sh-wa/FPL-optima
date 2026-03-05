@@ -7,7 +7,7 @@ from google.cloud import bigquery
 
 client = bigquery.Client()
 DEST_TABLE = "fpl-optima.fpl_bronze.understat_match_data"
-understat_id = "https://raw.githubusercontent.com/ChrisMusson/FPL-ID-Map/refs/heads/main/Understat.csv"
+url = "https://raw.githubusercontent.com/ChrisMusson/FPL-ID-Map/refs/heads/main/Understat.csv"
 
 BATCH_SIZE = 50  # Number of players to collect before uploading to BigQuery
 
@@ -19,7 +19,7 @@ def get_already_scraped_ids():
         return set()
 
 def main():
-    id_df = pd.read_csv(understat_id)
+    id_df = pd.read_csv(url)
 
     all_understat_ids = id_df[understat].dropna().unique().astype(int).astype(str)
     
