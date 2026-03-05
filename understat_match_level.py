@@ -4,26 +4,27 @@ from tqdm import tqdm
 from understatapi import UnderstatClient
 from google.cloud import bigquery
 
-# CONFIG
+
 client = bigquery.Client()
 DEST_TABLE = "fpl-optima.fpl_bronze.understat"
-ID_MAP_URL = "https://raw.githubusercontent.com/ChrisMusson/FPL-ID-Map/main/Master.csv"
+understat_id = "https://raw.githubusercontent.com/ChrisMusson/FPL-ID-Map/refs/heads/main/Understat.csv"
 
 BATCH_SIZE = 50  # Number of players to collect before uploading to BigQuery
 
 def get_already_scraped_ids():
     try:
-        query = f"SELECT DISTINCT CAST(player_id AS STRING) as id FROM `{DEST_TABLE}`"
+        query = f"SELECT DISTINCT CAST(understat AS STRING) as id FROM `{DEST_TABLE}`"
         return set(row.id for row in client.query(query))
     except Exception:
         return set()
 
 def main():
-    id_df = pd.read_csv(ID_MAP_URL)
-    understat_col = [c for c in id_df.columns if 'understat' in c.lower()][0]
-    all_understat_ids = id_df[understat_col].dropna().unique().astype(int).astype(str)
+    id_df = pd.read_csv(understat_id)
+
+    all_understat_ids = id_df[understat].dropna().unique().astype(int).astype(str)
     
     scraped_ids = get_already_scraped_ids()
+
     to_scrape = [i for i in all_understat_ids if i not in scraped_ids]
     
     print(f"Resuming: {len(scraped_ids)} players already in BigQuery.")
@@ -32,15 +33,15 @@ def main():
     batch_dfs = []
 
     with tqdm(to_scrape, desc="Overall Progress", unit="player") as pbar:
-        for i, p_id in enumerate(pbar):
+        for i, understat_id in enumerate(pbar):
             try:
-                pbar.set_description(f"Scraping Player {p_id}")
+                pbar.set_description(f"Scraping Player {understat_id}")
                 
                 with UnderstatClient() as understat:
-                    data = understat.player(player=p_id).get_match_data()
+                    data = understat.player(player=understat_id).get_match_data()
                     if data:
                         df = pd.DataFrame(data)
-                        df['player_id'] = p_id 
+                        df['understat'] = understat_id 
                         batch_dfs.append(df)
                 
                 # BATCH UPLOAD LOGIC
@@ -65,7 +66,7 @@ def main():
                 time.sleep(random.uniform(1.2, 2.5))
                 
             except Exception as e:
-                pbar.write(f"Error on {p_id}: {e}")
+                pbar.write(f"Error on {understat_id}: {e}")
                 time.sleep(5)
 
 if __name__ == "__main__":
