@@ -23,6 +23,7 @@ def main():
     player_info = {}
     for _, row in players_df.iterrows():
         player_info[row['id']] = {
+            'code': row['code'],
             'name': f"{row['first_name']}_{row['second_name']}",
             'team': team_map.get(row['team']),
             'position': pos_map.get(row['element_type']),
@@ -64,7 +65,7 @@ def main():
                             if 'round' in df.columns:
                                 df['gw'] = df['round'] 
 
-                            df['player_id'] = p_id 
+                            df['element'] = p_id 
                             
                             df = df.astype({col: 'float64' for col in numeric_cols if col in df.columns})
                             
