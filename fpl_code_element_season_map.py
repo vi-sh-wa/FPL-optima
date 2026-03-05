@@ -32,10 +32,10 @@ def map_id():
         except Exception as e:
             print(f"Could not retrieve {season}: {e}")
 
-    fpl_code_element_map = pd.concat(all_dfs, ignore_index=True)
+    fpl_code_element_season_map = pd.concat(all_dfs, ignore_index=True)
 
-    print(f"Uploading {len(fpl_code_element_id)} player mappings to BigQuery...")
-    job = client.load_table_from_dataframe(fpl_code_element_id, table_id, job_config=job_config)
+    print(f"Uploading {len(fpl_code_element_season_map)} player mappings to BigQuery...")
+    job = client.load_table_from_dataframe(fpl_code_element_season_map, table_id, job_config=job_config)
     
     job.result() 
 
