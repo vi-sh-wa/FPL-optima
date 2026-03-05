@@ -3,6 +3,7 @@ from google.cloud import bigquery
 
 client = bigquery.Client()
 
+table_id = "fpl-optima.fpl_bronze.fpl_code_element_season"
 def map_id():
     import pandas as pd
     base_url = "https://raw.githubusercontent.com/ChrisMusson/FPL-ID-Map/main/FPL/"
