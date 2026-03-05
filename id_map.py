@@ -4,20 +4,37 @@ from google.cloud import bigquery
 client = bigquery.Client()
 
 def map_id():
-    table_id = "fpl-optima.fpl_bronze.id_map"
+    import pandas as pd
+    base_url = "https://raw.githubusercontent.com/ChrisMusson/FPL-ID-Map/main/FPL/"
 
-    job_config = bigquery.LoadJobConfig(
-        write_disposition="WRITE_TRUNCATE",
-        autodetect=True, 
-    )
+    seasons = [
+        "16-17", "17-18", "18-19", "19-20", 
+        "20-21", "21-22", "22-23", "23-24", "24-25", "25-26"
+    ]
 
+    all_dfs = []
 
-    url = "https://raw.githubusercontent.com/ChrisMusson/FPL-ID-Map/main/Master.csv"
-    print("Downloading...")
-    df = pd.read_csv(url)
+    for season in seasons:
+        try:
+            url = f"{base_url}{season}.csv"
+            df = pd.read_csv(url)
+            
+            if season in df.columns:
+                df = df.rename(columns={season: 'element'})
+            
+            df['season'] = season
+            
+            all_dfs.append(df)
 
-    print(f"Uploading {len(df)} player mappings to BigQuery...")
-    job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
+            print(f"Successfully processed season: {season}")
+            
+        except Exception as e:
+            print(f"Could not retrieve {season}: {e}")
+
+    fpl_code_element_map = pd.concat(all_dfs, ignore_index=True)
+
+    print(f"Uploading {len(fpl_code_element_id)} player mappings to BigQuery...")
+    job = client.load_table_from_dataframe(fpl_code_element_id, table_id, job_config=job_config)
     
     job.result() 
 
