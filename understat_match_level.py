@@ -21,7 +21,7 @@ def get_already_scraped_ids():
 def main():
     id_df = pd.read_csv(url)
 
-    all_understat_ids = id_df[understat].dropna().unique().astype(int).astype(str)
+    all_understat_ids = id_df['understat'].dropna().unique().astype(int).astype(str)
     
     scraped_ids = get_already_scraped_ids()
 
