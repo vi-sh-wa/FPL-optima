@@ -6,7 +6,6 @@ client = bigquery.Client()
 table_id = "fpl-optima.fpl_bronze.fpl_code_element_season"
 
 def map_id():
-    import pandas as pd
     base_url = "https://raw.githubusercontent.com/ChrisMusson/FPL-ID-Map/main/FPL/"
 
     seasons = [
@@ -36,7 +35,7 @@ def map_id():
     fpl_code_element_season_map = pd.concat(all_dfs, ignore_index=True)
 
     print(f"Uploading {len(fpl_code_element_season_map)} player mappings to BigQuery...")
-    
+
     job_config = bigquery.LoadJobConfig(write_disposition="WRITE_APPEND")
     job = client.load_table_from_dataframe(fpl_code_element_season_map, table_id, job_config=job_config)
     
