@@ -6,7 +6,7 @@ client = bigquery.Client()
 table_id = "fpl-optima.fpl_bronze.fpl_code_understat"
 
 def code_x_understat_map_id():
-    url = "https://github.com/ChrisMusson/FPL-ID-Map/blob/main/Understat.csv"
+    url = "https://raw.githubusercontent.com/ChrisMusson/FPL-ID-Map/refs/heads/main/Understat.csv"
     df = pd.read_csv(url)
 
     print(f"Uploading {len(df)} player mappings to BigQuery...")
