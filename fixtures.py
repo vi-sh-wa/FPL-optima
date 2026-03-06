@@ -21,13 +21,7 @@ def get_fixtures():
     if 'kickoff_time' in df.columns:
         df['kickoff_time'] = pd.to_datetime(df['kickoff_time'])
 
-    job_config = bigquery.LoadJobConfig(
-        write_disposition="WRITE_TRUNCATE",
-        schema_update_options=[
-            bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION,
-            bigquery.SchemaUpdateOption.ALLOW_FIELD_RELAXATION
-        ],
-    )
+    job_config = bigquery.LoadJobConfig(write_disposition="WRITE_TRUNCATE" )
 
     print(f"Uploading {len(df)} rows to {table}")
     try:
