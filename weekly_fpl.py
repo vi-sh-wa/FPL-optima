@@ -34,11 +34,11 @@ def main():
     active_ids = client.query(query).to_dataframe()['id'].tolist()
 
 
-    last_gw_query = "SELECT MAX(gw) as last_gw FROM `fpl-optima.fpl_bronze.fpl` where season = '2025-26'"
-    last_gw = client.query(last_gw_query).to_dataframe()['last_gw'].iloc[0]
+    last_round_query = "SELECT MAX(round) as last_round FROM `fpl-optima.fpl_bronze.fpl` where season = '2025-26'"
+    last_round = client.query(last_round_query).to_dataframe()['last_round'].iloc[0]
 
     # If empty (first time running), start from 0
-    if pd.isna(last_gw):
+    if pd.isna(last_round):
         last_round = 0
 
     numeric_cols = ['expected_goals', 'expected_assists', 'expected_goal_involvements', 
@@ -79,7 +79,7 @@ def main():
 
     if all_new_rows:
         final_df = pd.concat(all_new_rows, ignore_index=True)
-        job_config = bigquery.LoadJobConfig(write_disposition="TRUNCATE")
+        job_config = bigquery.LoadJobConfig(write_disposition="WRITE_TRUNCATE")
         client.load_table_from_dataframe(final_df, "fpl-optima.fpl_bronze.fpl_season_match_history", job_config=job_config).result()
         print(f"Successfully added {len(final_df)} new match rows.")
     else:
