@@ -37,10 +37,6 @@ def main():
     last_round_query = "SELECT MAX(round) as last_round FROM `fpl-optima.fpl_bronze.fpl` where season = '2025-26'"
     last_round = client.query(last_round_query).to_dataframe()['last_round'].iloc[0]
 
-    # If empty (first time running), start from 0
-    if pd.isna(last_round):
-        last_round = 0
-
     numeric_cols = ['expected_goals', 'expected_assists', 'expected_goal_involvements', 
                     'expected_goals_conceded', 'value', 'selected', 'transfers_in','transfers_out', 
                     'influence', 'creativity', 'threat', 'ict_index', 'xP']
@@ -67,7 +63,6 @@ def main():
                             
                             df = df.astype({col: 'float64' for col in numeric_cols if col in df.columns})
                             
-                            df = df[df['round'] > last_round]
                             
                             if not df.empty:
                                 all_new_rows.append(df)
