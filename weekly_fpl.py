@@ -79,8 +79,12 @@ def main():
 
     if all_new_rows:
         final_df = pd.concat(all_new_rows, ignore_index=True)
-        job_config = bigquery.LoadJobConfig(write_disposition="WRITE_TRUNCATE")
+        job_config = bigquery.LoadJobConfig(write_disposition="WRITE_TRUNCATETRUNCATE")
         client.load_table_from_dataframe(final_df, "fpl-optima.fpl_bronze.fpl_season_match_history", job_config=job_config).result()
         print(f"Successfully added {len(final_df)} new match rows.")
     else:
         print("No new Gameweeks to ingest.")
+
+if __name__ == "__main__":
+    print("Script started...") 
+    main()
