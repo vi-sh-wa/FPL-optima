@@ -7,31 +7,20 @@ from google.cloud import bigquery
 
 client = bigquery.Client()
 
+# This is the table we check to see where we left off
+MASTER_TABLE = "fpl-optima.fpl_bronze.fpl"
+# This is the table where we store the fresh weekly pull
+DESTINATION_TABLE = "fpl-optima.fpl_bronze.fpl_season_match_history"
+
 def main():
-    # 1. Get Global Metadata and find the CURRENT Gameweek
+    # 1. Get Metadata & Team/Pos Maps
     boot_url = "https://fantasy.premierleague.com/api/bootstrap-static/"
     boot_data = requests.get(boot_url).json()
 
-    # Find the current gameweek (the one that is 'is_current' or the last 'finished' one)
-    current_gw = None
-    for event in boot_data['events']:
-        if event['is_current']:
-            current_gw = event['id']
-            break
-    
-    # If no GW is marked 'current' (e.g., between seasons), get the most recent finished one
-    if not current_gw:
-        finished_gws = [e['id'] for e in boot_data['events'] if e['finished']]
-        current_gw = max(finished_gws) if finished_gws else 1
-
-    print(f"Targeting Gameweek: {current_gw}")
-
-    # Map Teams and Positions
     teams_df = pd.DataFrame(boot_data['teams'])
     team_map = dict(zip(teams_df['id'], teams_df['name']))
     pos_map = {1: 'GKP', 2: 'DEF', 3: 'MID', 4: 'FWD'}
 
-    # Map Player Info
     players_df = pd.DataFrame(boot_data['elements'])
     player_info = {
         row['id']: {
@@ -43,13 +32,26 @@ def main():
         } for _, row in players_df.iterrows()
     }
 
-    # 2. Get list of players to check
+    # 2. Get active players to iterate through
     query = "SELECT DISTINCT id FROM `fpl-optima.fpl_bronze.current_epl_players`"
     active_ids = client.query(query).to_dataframe()['id'].tolist()
 
+    # 3. Determine the TARGET ROUND
+    # We find the max round currently in your master table for this season
+    last_round_query = f"SELECT MAX(round) as last_round FROM `{MASTER_TABLE}` WHERE season = '2025-26'"
+    last_round_res = client.query(last_round_query).to_dataframe()['last_round'].iloc[0]
+    
+    # If the table is empty, we start at 1. Otherwise, we want the NEXT round.
+    target_round = int(last_round_res + 1) if pd.notnull(last_round_res) else 1
+    print(f"Latest round in database: {last_round_res}. Target Ingest Round: {target_round}")
+
+    numeric_cols = ['expected_goals', 'expected_assists', 'expected_goal_involvements', 
+                    'expected_goals_conceded', 'value', 'selected', 'transfers_in','transfers_out', 
+                    'influence', 'creativity', 'threat', 'ict_index', 'xP']
+    
     all_new_rows = []
 
-    # 3. Request history for each player
+    # 4. Fetching Data
     for p_id in tqdm(active_ids):
         url = f"https://fantasy.premierleague.com/api/element-summary/{p_id}/"
         try:
@@ -59,9 +61,8 @@ def main():
                 if 'history' in data and data['history']:
                     df = pd.DataFrame(data['history'])
                     
-                    # FILTER HERE: Only keep the row for the target Gameweek
-                    # Note: API uses 'round' for Gameweek number
-                    df = df[df['round'] == current_gw]
+                    # --- THE CHANGE: Filter for exactly the target round ---
+                    df = df[df['round'] == target_round]
                     
                     if not df.empty:
                         df['code'] = player_info[p_id]['code']
@@ -72,26 +73,30 @@ def main():
                         df['season'] = '2025-26'
                         df['element'] = p_id 
                         
+                        # Convert numeric columns to avoid schema issues
+                        for col in numeric_cols:
+                            if col in df.columns:
+                                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+                        
                         all_new_rows.append(df)
             
-            time.sleep(random.uniform(0.4, 0.8)) # Polite scraping
+            time.sleep(random.uniform(0.4, 0.8)) # Rate limiting
                     
         except Exception as e:
             print(f"Skipping player {p_id}: {e}")
 
-    # 4. Upload to BigQuery
+    # 5. Load to BigQuery
     if all_new_rows:
         final_df = pd.concat(all_new_rows, ignore_index=True)
         
-        # Decide: Do you want to overwrite the "Weekly" table (WRITE_TRUNCATE)
-        # or add to a Master History (WRITE_APPEND)?
+        # Using WRITE_TRUNCATE so this table always represents the "Fresh Weekly Pull"
         job_config = bigquery.LoadJobConfig(write_disposition="WRITE_TRUNCATE")
         
-        dest_table = "fpl-optima.fpl_bronze.weekly_fpl_latest"
-        client.load_table_from_dataframe(final_df, dest_table, job_config=job_config).result()
-        print(f"Successfully uploaded {len(final_df)} rows for GW {current_gw}.")
+        print(f"Uploading {len(final_df)} rows for Round {target_round} to {DESTINATION_TABLE}...")
+        client.load_table_from_dataframe(final_df, DESTINATION_TABLE, job_config=job_config).result()
+        print("Weekly Ingest Complete!")
     else:
-        print(f"No data found for Gameweek {current_gw}.")
+        print(f"No rows found for Round {target_round}. Is the Gameweek finished yet?")
 
 if __name__ == "__main__":
     main()
