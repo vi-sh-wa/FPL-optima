@@ -8,11 +8,10 @@ from google.cloud import bigquery
 client = bigquery.Client()
 
 # Configuration
-MASTER_TABLE = "fpl-optima.fpl_bronze.fpl"
-DESTINATION_TABLE = "fpl-optima.fpl_bronze.fpl_season_match_history"
+look_up_table = "fpl-optima.fpl_bronze.fpl"
+dest_table = "fpl-optima.fpl_bronze.fpl_weekly_match_history"
 
 def main():
-    # 1. Get Global Metadata
     boot_url = "https://fantasy.premierleague.com/api/bootstrap-static/"
     try:
         boot_data = requests.get(boot_url).json()
@@ -20,29 +19,26 @@ def main():
         print(f"Failed to reach FPL API: {e}")
         return
 
-    # 2. Determine the TARGET ROUND from Master Data
-    last_round_query = f"SELECT MAX(round) as last_round FROM `{MASTER_TABLE}` WHERE season = '2025-26'"
+
+    last_round_query = f"SELECT MAX(round) as last_round FROM `{look_up_table}` WHERE season = '2025-26'" # Finding the recent gameweek from master table
     last_round_res = client.query(last_round_query).to_dataframe()['last_round'].iloc[0]
     
-    # If table is empty, start at 1. Otherwise, target the next round.
-    target_round = int(last_round_res + 1) if pd.notnull(last_round_res) else 1
 
-    # 3. --- THE "METICULOUS" GATEKEEPER CHECK ---
-    target_event = next((e for e in boot_data['events'] if e['id'] == target_round), None)
+    target_round = int(last_round_res + 1) if pd.notnull(last_round_res) else 1     # If table is empty (for new season), start at 1. Otherwise, target the next round.
+
+    target_event = next((e for e in boot_data['events'] if e['id'] == target_round), None) # add data when the round is finished (all bonus point added)
 
     if not target_event:
         print(f"Round {target_round} is not in the current season schedule.")
         return
 
-    # We check both 'finished' and 'data_checked' for 100% finalized data
     if not (target_event['finished'] and target_event['data_checked']):
-        print(f"🚨 Stand down! Round {target_round} is not finalized yet.")
+        print(f"Ahhh! Dude, try after a while!! round {target_round} is not finalized yet.")
         print(f"Status - Finished: {target_event['finished']}, Data Checked: {target_event['data_checked']}")
         return
 
-    print(f"✅ Round {target_round} is officially finalized. Starting ingest...")
+    print(f"Round {target_round} is officially finalized. Starting ingest...")
 
-    # 4. Map Metadata for the Loop
     teams_df = pd.DataFrame(boot_data['teams'])
     team_map = dict(zip(teams_df['id'], teams_df['name']))
     pos_map = {1: 'GKP', 2: 'DEF', 3: 'MID', 4: 'FWD'}
@@ -58,7 +54,6 @@ def main():
         } for _, row in players_df.iterrows()
     }
 
-    # 5. Get active player IDs
     query = "SELECT DISTINCT id FROM `fpl-optima.fpl_bronze.current_epl_players`"
     active_ids = client.query(query).to_dataframe()['id'].tolist()
 
@@ -67,7 +62,6 @@ def main():
                     'expected_goals_conceded', 'value', 'selected', 'transfers_in','transfers_out', 
                     'influence', 'creativity', 'threat', 'ict_index', 'xP']
 
-    # 6. Fetching Loop
     for p_id in tqdm(active_ids):
         url = f"https://fantasy.premierleague.com/api/element-summary/{p_id}/"
         try:
@@ -101,13 +95,12 @@ def main():
         except Exception as e:
             print(f"Skipping player {p_id}: {e}")
 
-    # 7. Final Load
     if all_new_rows:
         final_df = pd.concat(all_new_rows, ignore_index=True)
         job_config = bigquery.LoadJobConfig(write_disposition="WRITE_TRUNCATE")
         
         print(f"Uploading {len(final_df)} rows for Round {target_round} to BigQuery...")
-        client.load_table_from_dataframe(final_df, DESTINATION_TABLE, job_config=job_config).result()
+        client.load_table_from_dataframe(final_df, dest_table, job_config=job_config).result()
         print(f"Success! Weekly Bronze table updated with Round {target_round}.")
     else:
         print(f"No match history found for Round {target_round} despite API status.")
