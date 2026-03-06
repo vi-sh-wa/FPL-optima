@@ -16,6 +16,7 @@ def map_id():
     all_dfs = []
 
     for season in seasons:
+        full_season = f"20{season}" 
         try:
             url = f"{base_url}{season}.csv"
             df = pd.read_csv(url)
@@ -23,7 +24,7 @@ def map_id():
             if season in df.columns:
                 df = df.rename(columns={season: 'element'})
             
-            df['season'] = season
+            df['season'] = full_season
             
             all_dfs.append(df)
 
