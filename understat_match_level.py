@@ -4,70 +4,60 @@ from tqdm import tqdm
 from understatapi import UnderstatClient
 from google.cloud import bigquery
 
-
 client = bigquery.Client()
-DEST_TABLE = "fpl-optima.fpl_bronze.understat_match_data"
-url = "https://raw.githubusercontent.com/ChrisMusson/FPL-ID-Map/refs/heads/main/Understat.csv"
 
-BATCH_SIZE = 50  # Number of players to collect before uploading to BigQuery
+MASTER_ID_TABLE = "fpl-optima.fpl_silver.master_id"
+BRONZE_UNDERSTAT_TABLE = "fpl-optima.fpl_bronze.understat_match_data"
 
-def get_already_scraped_ids():
-    try:
-        query = f"SELECT DISTINCT CAST(understat AS STRING) as id FROM `{DEST_TABLE}`"
-        return set(row.id for row in client.query(query))
-    except Exception:
-        return set()
+def get_mapped_understat_ids():
+    query = f"""
+        SELECT DISTINCT CAST(understat AS STRING) as id 
+        FROM `{MASTER_ID_TABLE}` 
+        WHERE understat IS NOT NULL
+    """
+    return [row.id for row in client.query(query)]
 
 def main():
-    id_df = pd.read_csv(url)
-
-    all_understat_ids = id_df['understat'].dropna().unique().astype(int).astype(str)
-    
-    scraped_ids = get_already_scraped_ids()
-
-    to_scrape = [i for i in all_understat_ids if i not in scraped_ids]
-    
-    print(f"Resuming: {len(scraped_ids)} players already in BigQuery.")
-    print(f"To Scrape: {len(to_scrape)} players remaining.")
+    understat_ids = get_mapped_understat_ids()
+    print(f"Found {len(understat_ids)} mapped players. Starting understat ingest...")
 
     batch_dfs = []
-
-    with tqdm(to_scrape, desc="Overall Progress", unit="player") as pbar:
-        for i, understat_id in enumerate(pbar):
+    
+    with UnderstatClient() as understat:
+        for i, u_id in enumerate(tqdm(understat_ids)):
             try:
-                pbar.set_description(f"Scraping Player {understat_id}")
+                data = understat.player(player=u_id).get_match_data()
                 
-                with UnderstatClient() as understat:
-                    data = understat.player(player=understat_id).get_match_data()
-                    if data:
-                        df = pd.DataFrame(data)
-                        df['understat'] = understat_id 
+                if data:
+                    df = pd.DataFrame(data)
+                    
+                    df['understat_id'] = u_id
+                    
+                    df = df[df['date'] >= '2016-08-01']
+                    
+                    if not df.empty:
                         batch_dfs.append(df)
-                
-                # BATCH UPLOAD LOGIC
-                if len(batch_dfs) >= BATCH_SIZE or (i == len(to_scrape) - 1 and batch_dfs):
+
+                # BigQuery Batch Uploading (every 50 players to save memory/API quota)
+                if len(batch_dfs) >= 100 or (i == len(understat_ids) - 1 and batch_dfs):
                     final_df = pd.concat(batch_dfs, ignore_index=True)
-
-                    for col in final_df.columns:
-                        final_df[col] = final_df[col].apply(lambda x: x[0] if isinstance(x, list) else x)
-
-                    cols_to_fix = ['xG', 'xA', 'npg', 'npxG', 'xGChain', 'xGBuildup', 
-                                   'goals', 'assists', 'key_passes', 'shots', 'time']
-                    for col in cols_to_fix:
+                    
+                    # Numeric cleanup
+                    cols = ['xG', 'xA', 'xGChain', 'xGBuildup', 'shots', 'key_passes', 'time']
+                    for col in cols:
                         if col in final_df.columns:
-                            final_df[col] = pd.to_numeric(final_df[col], errors='coerce').astype('float64')
+                            final_df[col] = pd.to_numeric(final_df[col], errors='coerce').fillna(0.0)
 
                     job_config = bigquery.LoadJobConfig(write_disposition="WRITE_APPEND")
-                    client.load_table_from_dataframe(final_df, DEST_TABLE, job_config=job_config).result()
+                    client.load_table_from_dataframe(final_df, BRONZE_UNDERSTAT_TABLE, job_config=job_config).result()
                     
-                    batch_dfs = [] 
-                    pbar.write(f"Batch of {BATCH_SIZE} saved.")
-
-                time.sleep(random.uniform(1.2, 2.5))
+                    batch_dfs = [] # Reset batch
+                
+                # Polite scraping delay
+                time.sleep(random.uniform(0.6, 1.2))
                 
             except Exception as e:
-                pbar.write(f"Error on {understat_id}: {e}")
-                time.sleep(5)
+                print(f"Skipping {u_id}: {e}")
 
 if __name__ == "__main__":
     main()
