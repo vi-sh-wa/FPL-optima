@@ -7,7 +7,7 @@ from google.cloud import bigquery
 
 client = bigquery.Client()
 
-TABLE_ID = "fpl-optima.fpl_bronze.fpl"
+TABLE_ID = "fpl-optima.fpl_bronze.weekly_fpl"
 
 def main():
 
@@ -39,7 +39,7 @@ def main():
 
     # If empty (first time running), start from 0
     if pd.isna(last_gw):
-        last_gw = 0
+        last_round = 0
 
     numeric_cols = ['expected_goals', 'expected_assists', 'expected_goal_involvements', 
                     'expected_goals_conceded', 'value', 'selected', 'transfers_in','transfers_out', 
@@ -60,16 +60,14 @@ def main():
                             df['team'] = player_info[p_id]['team']
                             df['position'] = player_info[p_id]['position']
                             df['xP'] = player_info[p_id]['xP']
-                            df['season'] = '2025/26'
+                            df['season'] = '2025-26'
                             
-                            if 'round' in df.columns:
-                                df['gw'] = df['round'] 
 
                             df['element'] = p_id 
                             
                             df = df.astype({col: 'float64' for col in numeric_cols if col in df.columns})
                             
-                            df = df[df['gw'] > last_gw]
+                            df = df[df['round'] > last_round]
                             
                             if not df.empty:
                                 all_new_rows.append(df)
@@ -81,7 +79,7 @@ def main():
 
     if all_new_rows:
         final_df = pd.concat(all_new_rows, ignore_index=True)
-        job_config = bigquery.LoadJobConfig(write_disposition="WRITE_APPEND")
+        job_config = bigquery.LoadJobConfig(write_disposition="TRUNCATE")
         client.load_table_from_dataframe(final_df, "fpl-optima.fpl_bronze.fpl_season_match_history", job_config=job_config).result()
         print(f"Successfully added {len(final_df)} new match rows.")
     else:
