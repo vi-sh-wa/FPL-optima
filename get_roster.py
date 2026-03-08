@@ -16,12 +16,13 @@ def get_roster():
         
         for m in league_matches:
             m_id = m['id']
-            match_map[m_id] = {
-                'h': m['h']['title'],
-                'a': m['a']['title'],
-                'season': season,
-                'datetime': m['datetime'] # Helpful for time-series analysis
-            }
+            if str(m['isResult']).lower() == 'true':
+                match_map[m_id] = {
+                    'h': m['h']['title'],
+                    'a': m['a']['title'],
+                    'season': season,
+                    'datetime': m['datetime'] 
+                }
 
     match_ids = list(match_map.keys())
     print(f"Total matches to scrape: {len(match_ids)}")
