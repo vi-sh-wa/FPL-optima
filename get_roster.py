@@ -3,6 +3,8 @@ import os
 import time
 import random
 from tqdm import tqdm
+from understatapi import UnderstatClient
+understat = UnderstatClient()
 
 seasons = [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
 match_map = {}
