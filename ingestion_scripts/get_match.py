@@ -35,7 +35,7 @@ def get_match():
                     'datetime': matches['datetime'],
                     'h_win_forecast': float(matches['forecast']['w']),
                     'h_draw_forecast': float(matches['forecast']['d']),
-                    'h_win_forecast': float(matches['forecast']['l']),
+                    'h_loss_forecast': float(matches['forecast']['l']),
                 })
 
     if macth_list:
