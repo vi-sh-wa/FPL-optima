@@ -53,4 +53,4 @@ def get_match():
         print("No new matches found since last update.")
 
 if __name__ == "__main__":
-    get_roster()
+    get_match()
