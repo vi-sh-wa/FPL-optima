@@ -3,7 +3,7 @@ import os
 from understatapi import UnderstatClient
 understat = UnderstatClient()
 
-file_path = "data/EPL_match_summaries.parquet"
+file_path = "data/EPL_match_summary.parquet"
 
 if os.path.exists(file_path):
     existing_data = pd.read_parquet(file_path, columns=['match_id'])
