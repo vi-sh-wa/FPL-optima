@@ -17,29 +17,24 @@ Hello!! This is my first project where I am parallely working on Github. Everybo
 
 ### Phase 1: Data Infrastructure & Orchestration (Current)
 
-- [x] **API Integration:** Establish pipelines for FPL bootstrap-static and fixtures endpoints.
+- [x] **API Integration:** Establish multi-source pipelines for FPL (bootstrap-static) and Understat (Scraping) endpoints.
+- [x] **Modular Engine Design:** Refactored monolithic scripts into decoupled "Engines" (`fpl_engine.py`, `understat_engine.py`) for better maintenance.
+- [x] **Incremental Ingestion:** Implemented `skip_id` and `target_round` logic to ensure only new data is fetched, minimizing API overhead and preventing IP rate-limiting.
+- [x] **Global Configuration:** Integrated `PyYAML` orchestration, allowing for seamless season transitions (e.g., 2024-25 to 2025-26) and path management without modifying core logic.
+- [x] **Data Integrity:** Implemented automated deduplication logic (Player + Round + Fixture + Season) to ensure high-fidelity historical datasets, even during Double Gameweeks (DGW).
+- [x] **Cloud-Ready Provisioning:** Designed local Parquet storage architecture to be fully compatible with BigQuery `LoadJob` schemas for future cloud migration.
 
-- [x] **Active Players Filtering**: Implement logic to filter out transferred/unavailable and those with 100% chance of playing.
+### Phase 2: Feature Engineering & Advanced Modifiers
 
-- [x] **Sample Size Filtering:** Apply a minutes >= 270 threshold to ensure statistical significance for player metrics.
-
-- [x] **Scribbler Validation (Whiteboard Phase):** Prototypes of all logic in Jupyter Notebooks to verify "Manager Logic" before script formalization.
-
-- [x] **Cloud Provisioning:** BigQuery Data Lake: Create a BigQuery dataset and ingest historical FPL data for long-term analytics.
-
-
-### Phase 2: From Static Fixture Difficulty Rating (FDR) to Dynamic Modifiers
-
-- [x] **Feature Engineering:** Replace standard 1–5 FDR with weighted heuristic score ($0.7 \times \text{Goals Conceded} + 0.3 \times \text{BPS Conceded}$) to capture both "leaky" and "passive" opponent behaviors.
-- [x] **Efficiency Normalization:** Implement ICT per 90 metrics to neutralize bias toward high-minute starters and identify high-upside "super-subs."
-
-- [x] **The Interaction Logic:** Calculate the Final Opportunity Score ($Player\_Power \times Opponent\_Multiplier$) to map quality against fixture vulnerability.
-
-- [x] **Script Refactoring:** Transition "Whiteboard" notebook code into modular, generic .py files for AWS Lambda automation.
+- [x] **Dynamic FDR:** Developed a heuristic scoring model ($0.7 \times \text{Goals Conceded} + 0.3 \times \text{BPS Conceded}$) to replace static 1–5 ratings.
+- [x] **Efficiency Normalization:** Standardized player impact via ICT per 90 metrics, identifying high-upside "super-subs" hidden by low total minutes.
+- [x] **Automated Data Cleaning:** Implemented robust type-casting and `NaN` handling for xG, xA, and ICT indices to ensure model-ready inputs.
+- [ ] **The Interaction Logic:** (In Progress) Finalizing the Opportunity Score ($Player\_Power \times Opponent\_Multiplier$) mapping.
+- [x] **Script Formalization:** Successfully transitioned "Whiteboard" logic from Jupyter into production-grade `.py` modules.
 
 ### Phase 3: Predictive Modeling (The xP Engine)
 
-- [ ] **Model Development:** Train a Regression model (e.g., Random Forest or XGBoost) to forecast Expected Points ($xP$).
+- [x] **Model Development:** Train a Regression model (e.g., Random Forest or XGBoost) to forecast Expected Points ($xP$).
 
 - [ ] **Feature Importance:** Use the logic from Phase 2 as a primary feature to guide the ML model's learning.
 
