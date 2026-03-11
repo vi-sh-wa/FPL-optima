@@ -16,6 +16,8 @@ FPL_PATH = config['paths']['fpl_historical']
 USTAT_SUMMARY_PATH = config['paths']['understat_summary']
 USTAT_ROSTER_PATH = config['paths']['understat_roster']
 
+
+
 def run_fpl_pipeline():
     print("\n Starting FPL Update")
     if os.path.exists(FPL_PATH):
@@ -43,7 +45,8 @@ def run_fpl_pipeline():
             'player_name': f"{p['first_name']}_{p['second_name']}",
             'team': team_map.get(p['team']),
             'position': pos_map.get(p['element_type']),
-            'xP': float(p['ep_next'] or 0) 
+            'xP': float(p['ep_next'] or 0),
+            'code': str(p['code']) 
         } for p in boot_data['elements']
     }
 
@@ -55,7 +58,7 @@ def run_fpl_pipeline():
     numeric_cols = [
         'expected_goals', 'expected_assists', 'expected_goal_involvements', 
         'expected_goals_conceded', 'value', 'selected', 'transfers_in',
-        'transfers_out', 'influence', 'creativity', 'threat', 'ict_index', 'xp'
+        'transfers_out', 'influence', 'creativity', 'threat', 'ict_index', 'xP'
     ]
     for col in numeric_cols:
         if col in combined_df.columns:
@@ -64,6 +67,10 @@ def run_fpl_pipeline():
         combined_df = combined_df.drop_duplicates(subset=['player_name', 'round', 'fixture','season'], keep='last')
         combined_df.to_parquet(FPL_PATH, index=False)
         print(f"Success: GW {target_round} added.")
+
+
+
+
 
 def run_understat_pipeline(understat_client):
     print("\nStarting Understat Update")
