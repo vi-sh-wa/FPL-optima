@@ -3,70 +3,70 @@ import os
 import pandas as pd
 from understatapi import UnderstatClient
 
-from get_match import get_match
-from understat_scrapper import get_roster_data
-from fpl_scrapper import get_fpl_metadata, fetch_player_histories
+from ingestion_scripts.get_match import get_match
+from ingestion_scripts.understat_scrapper import get_roster_data
+from ingestion_scripts.fpl_scrapper import *
 
 with open("config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 FPL_SEASON = config['current_season_fpl']
 USTAT_SEASONS = config['current_season_understat'] 
-FPL_PATH = config['paths']['fpl_historical']
+FPL_PATH = config['paths']['fpl_current']
 USTAT_SUMMARY_PATH = config['paths']['understat_summary']
 USTAT_ROSTER_PATH = config['paths']['understat_roster']
 
 
 
 def run_fpl_pipeline():
-    print("\n Starting FPL Update")
+    print(f"\n--- Starting FPL Update for {FPL_SEASON} ---")
+    
+    # A. Check what we already have locally
     if os.path.exists(FPL_PATH):
         existing_df = pd.read_parquet(FPL_PATH)
         season_data = existing_df[existing_df['season'] == FPL_SEASON]
-        last_round = season_data['round'].max() if not season_data.empty else None
+        last_saved_round = season_data['round'].max() if not season_data.empty else 0
     else:
         existing_df = pd.DataFrame()
-        last_round = None
+        last_saved_round = 0
 
+    # B. Check what the API says is ready
     boot_data = get_fpl_metadata()
-    target_round = int(last_round + 1) if pd.notnull(last_round) else 1
-    target_event = next((e for e in boot_data['events'] if e['id'] == target_round), None)
+    # Problem Fix: Correctly identifying finished/checked rounds
+    ready_rounds = [e['id'] for e in boot_data['events'] if e['finished'] and e['data_checked']]
+    max_ready_round = max(ready_rounds) if ready_rounds else 0
 
-    if not target_event or not (target_event['finished'] and target_event['data_checked']):
-        print(f"Round {target_round} is not ready yet.")
+    # C. Decision Logic
+    rounds_to_fetch = list(range(int(last_saved_round + 1), int(max_ready_round + 1)))
+
+    if not rounds_to_fetch:
+        print(f"Data is already up to date (GW {last_saved_round}).")
         return
 
-    print(f"Round {target_round} is ready. Fetching...")
-    
-    team_map = {t['id']: t['name'] for t in boot_data['teams']}
-    pos_map = {1: 'GKP', 2: 'DEF', 3: 'MID', 4: 'FWD'}
-    player_map = {
-        p['id']: {
-            'player_name': f"{p['first_name']}_{p['second_name']}",
-            'team': team_map.get(p['team']),
-            'position': pos_map.get(p['element_type']),
-            'xP': float(p['ep_next'] or 0),
-            'code': str(p['code']) 
-        } for p in boot_data['elements']
-    }
+    print(f"Missing gameweek(s): {rounds_to_fetch}")
 
-    new_data_df = fetch_player_histories(player_map, FPL_SEASON)
 
+    # D. Prepare Maps & Fetch
+    player_map = get_player_mappings(boot_data)
+
+    new_data_df = get_player_history(player_map, FPL_SEASON, rounds_to_fetch)
+
+    # E. Save and Clean
     if not new_data_df.empty:
+        new_data_df['kickoff_time'] = pd.to_datetime(new_data_df['kickoff_time']).dt.strftime('%Y-%m-%d %H:%M:%S')
         combined_df = pd.concat([existing_df, new_data_df], ignore_index=True)
-        
-    numeric_cols = [
-        'expected_goals', 'expected_assists', 'expected_goal_involvements', 
-        'expected_goals_conceded', 'value', 'selected', 'transfers_in',
-        'transfers_out', 'influence', 'creativity', 'threat', 'ict_index', 'xP'
-    ]
-    for col in numeric_cols:
-        if col in combined_df.columns:
-            combined_df[col] = pd.to_numeric(combined_df[col], errors='coerce').fillna(0.0).astype('float64')
 
-        combined_df = combined_df.drop_duplicates(subset=['player_name', 'round', 'fixture','season'], keep='last')
+        numeric_cols = ['expected_goals', 'expected_assists', 'expected_goal_involvements', 
+                        'expected_goals_conceded', 'value', 'selected', 'transfers_in','transfers_out', 
+                        'influence', 'creativity', 'threat', 'ict_index', 'xP']
+        for col in numeric_cols:
+            if col in combined_df.columns:
+                combined_df[col] = pd.to_numeric(combined_df[col], errors='coerce').fillna(0.0)
+
+        combined_df = combined_df.drop_duplicates(subset=['name', 'round', 'fixture', 'season'], keep='last')
+        
         combined_df.to_parquet(FPL_PATH, index=False)
-        print(f"Success: GW {target_round} added.")
+        print(f"Success: Gameweek {rounds_to_fetch} added to current seasons data.")
 
 
 
@@ -75,7 +75,7 @@ def run_fpl_pipeline():
 def run_understat_pipeline(understat_client):
     print("\nStarting Understat Update")
 
-    #Match summary : Match ids in a specifi season
+    #Match summary : Match ids in a specific season
 
     if os.path.exists(USTAT_SUMMARY_PATH):
         existing_summ = pd.read_parquet(USTAT_SUMMARY_PATH, columns=['match_id'])
