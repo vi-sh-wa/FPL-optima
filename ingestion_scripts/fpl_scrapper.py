@@ -12,8 +12,7 @@ def get_fpl_metadata():
 
 def get_player_history(player_map, season_label, rounds_to_fetch):
     all_new_data = []
-    
-    # tqdm will now show progress for the whole backfill process
+
     for p_id, p_info in tqdm(player_map.items(), desc="Backfilling FPL Data"):
         try:
             url = f"https://fantasy.premierleague.com/api/element-summary/{p_id}/"
@@ -22,7 +21,6 @@ def get_player_history(player_map, season_label, rounds_to_fetch):
                 data = r.json()
                 if 'history' in data:
                     for entry in data['history']:
-                        # Check if this entry's round is in our "to-fetch" list
                         if entry['round'] in rounds_to_fetch:
                             entry.update(p_info)
                             entry['season'] = season_label
@@ -35,7 +33,6 @@ def get_player_history(player_map, season_label, rounds_to_fetch):
 
 
 def get_player_mappings(boot_data):
-    # This is exactly your "Part D" logic moved into its own house
     team_map = {t['id']: t['name'] for t in boot_data['teams']}
     pos_map = {1: 'GKP', 2: 'DEF', 3: 'MID', 4: 'FWD'}
     
