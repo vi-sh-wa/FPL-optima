@@ -7,13 +7,12 @@ def get_roster_data(understat, seasons, skip_ids):
     match_map = {}
     player_match_data = []
 
-    # 1. Map the matches for all seasons
     for season in seasons:
         print(f"Mapping season: {season}")
         league_matches = understat.league(league="EPL").get_match_data(season=season)
         
         for m in league_matches:
-            m_id = str(m['id']) # Ensure string for comparison
+            m_id = str(m['id']) 
             if str(m['isResult']).lower() == 'true':
                 match_map[m_id] = {
                     'h': m['h']['title'],
@@ -22,7 +21,7 @@ def get_roster_data(understat, seasons, skip_ids):
                     'datetime': m['datetime'] 
                 }
 
-    # 2. Filter out matches we already have
+    # Filter out matches we already have
     all_match_ids = list(match_map.keys())
     matches_to_scrape = [m for m in all_match_ids if m not in skip_ids]
     
@@ -30,7 +29,7 @@ def get_roster_data(understat, seasons, skip_ids):
     print(f"Already indexed: {len(skip_ids)}")
     print(f"New matches to scrape: {len(matches_to_scrape)}")
 
-    # 3. Scrape only the new ones
+    # Scraping only the new ones
     for m_id in tqdm(matches_to_scrape, desc="Scraping Roster Details"):
         try:
             roster = understat.match(match=m_id).get_roster_data()
