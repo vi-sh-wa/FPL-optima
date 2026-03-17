@@ -10,7 +10,6 @@ def get_match(completed_matches_set, understat_client):
         for matches in data:
             m_id = str(matches['id'])
             
-            # Check against the set passed into the function
             if str(matches['isResult']).lower() == 'true' and m_id not in completed_matches_set:
                 match_list.append({
                     'match_id': m_id,
