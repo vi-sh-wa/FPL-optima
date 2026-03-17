@@ -97,19 +97,19 @@ def run_understat_pipeline(understat_client):
     if new_rost_list:
         new_rost_df = pd.DataFrame(new_rost_list)
         
-    if not new_rost_df.empty:
-        for col in ['xG', 'xA', 'npxG', 'xGChain', 'xGBuildup']:
-            if col in new_rost_df.columns:
-                # Convert to numeric, turn errors to NaN, then fill NaN with 0.0
-                new_rost_df[col] = pd.to_numeric(new_rost_df[col], errors='coerce').fillna(0.0)
+        if not new_rost_df.empty:
+            for col in ['xG', 'xA', 'npxG', 'xGChain', 'xGBuildup']:
+                if col in new_rost_df.columns:
+                    new_rost_df[col] = pd.to_numeric(new_rost_df[col], errors='coerce').fillna(0.0)
 
-        final_rost = pd.concat([existing_rost, new_rost_df], ignore_index=True)
-        final_rost.to_parquet(USTAT_ROSTER_PATH, index=False)
+            final_rost = pd.concat([existing_rost, new_rost_df], ignore_index=True)
+            final_rost.to_parquet(USTAT_ROSTER_PATH, index=False)
         print(f"Roster: Added {len(new_rost_df)} rows.")
+    else:
+        print("Roster: No new matches to scrape.")
 
 if __name__ == "__main__":
     with UnderstatClient() as understat:
         run_fpl_pipeline()
         run_understat_pipeline(understat)
     
-    print("\nAll tables updated!")
