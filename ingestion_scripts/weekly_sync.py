@@ -21,7 +21,7 @@ USTAT_ROSTER_PATH = config['paths']['understat_roster']
 def run_fpl_pipeline():
     print(f"\n--- Starting FPL Update for {FPL_SEASON} ---")
     
-    # A. Check what we already have locally
+    #Checking local file
     if os.path.exists(FPL_PATH):
         existing_df = pd.read_parquet(FPL_PATH)
         season_data = existing_df[existing_df['season'] == FPL_SEASON]
@@ -30,28 +30,22 @@ def run_fpl_pipeline():
         existing_df = pd.DataFrame()
         last_saved_round = 0
 
-    # B. Check what the API says is ready
+    # Checking if/which GW is ready from the api
     boot_data = get_fpl_metadata()
     # Problem Fix: Correctly identifying finished/checked rounds
     ready_rounds = [e['id'] for e in boot_data['events'] if e['finished'] and e['data_checked']]
     max_ready_round = max(ready_rounds) if ready_rounds else 0
 
-    # C. Decision Logic
     rounds_to_fetch = list(range(int(last_saved_round + 1), int(max_ready_round + 1)))
-
     if not rounds_to_fetch:
         print(f"Data is already up to date (GW {last_saved_round}).")
         return
-
     print(f"Missing gameweek(s): {rounds_to_fetch}")
 
 
-    # D. Prepare Maps & Fetch
     player_map = get_player_mappings(boot_data)
-
     new_data_df = get_player_history(player_map, FPL_SEASON, rounds_to_fetch)
 
-    # E. Save and Clean
     if not new_data_df.empty:
         new_data_df['kickoff_time'] = pd.to_datetime(new_data_df['kickoff_time']).dt.strftime('%Y-%m-%d %H:%M:%S')
         combined_df = pd.concat([existing_df, new_data_df], ignore_index=True)
@@ -75,8 +69,6 @@ def run_fpl_pipeline():
 def run_understat_pipeline(understat_client):
     print("\nStarting Understat Update")
 
-    #Match summary : Match ids in a specific season
-
     if os.path.exists(USTAT_SUMMARY_PATH):
         existing_summ = pd.read_parquet(USTAT_SUMMARY_PATH, columns=['match_id'])
         completed_matches = set(existing_summ['match_id'].astype(str).tolist())
@@ -92,8 +84,6 @@ def run_understat_pipeline(understat_client):
             final_summ = pd.concat([pd.read_parquet(USTAT_SUMMARY_PATH), new_summ_df], ignore_index=True)
         final_summ.to_parquet(USTAT_SUMMARY_PATH, index=False)
         print(f"Summary: Added {len(new_matches)} matches.")
-
-    # Player data for all the match ids in a specific season
 
     if os.path.exists(USTAT_ROSTER_PATH):
         existing_rost = pd.read_parquet(USTAT_ROSTER_PATH)
