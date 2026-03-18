@@ -6,6 +6,7 @@ def get_match(completed_matches_set, understat_client):
     seasons = [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
 
     for season in seasons:
+        season_label = f"{season}-{str(season + 1)[2:]}"
         data = understat_client.league(league="EPL").get_match_data(season=season)
         for matches in data:
             m_id = str(matches['id'])
@@ -23,5 +24,6 @@ def get_match(completed_matches_set, understat_client):
                     'h_win_forecast': float(matches['forecast']['w']),
                     'h_draw_forecast': float(matches['forecast']['d']),
                     'h_loss_forecast': float(matches['forecast']['l']),
+                    'season': season_label
                 })
     return match_list 
