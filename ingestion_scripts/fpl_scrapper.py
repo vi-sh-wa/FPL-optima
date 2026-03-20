@@ -50,7 +50,7 @@ def get_player_mappings(boot_data):
     return player_map, team_map
 
 
-def sync_fpl_fixtures(team_map):
+def sync_fpl_fixtures(team_map, season_label):
     fixture_url = "https://fantasy.premierleague.com/api/fixtures/"
     print("Fetching fixtures from FPL API...")
     response = requests.get(fixture_url)
@@ -85,7 +85,7 @@ def sync_fpl_fixtures(team_map):
                     'h_score': fixture['team_h_score'],
                     'a_score': fixture['team_a_score'],
                     'kickoff_time': fixture['kickoff_time'],
-                    'finished' : fixture['finished'],
+                    'season' : season_label,
                 })
                 break
     

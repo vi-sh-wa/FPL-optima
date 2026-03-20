@@ -22,7 +22,7 @@ def run_fpl_pipeline():
     print(f"\n Initializing pipeline... ")
                                                                                                                 # Checking if files exists
     if os.path.exists(FPL_FIXTURE):
-        print(f"FPL fixture data exists.... ")
+        print(f"FPL fixture data exists!!")
         existing_fixtures = pd.read_parquet(FPL_FIXTURE)
         last_fixture_round = existing_fixtures['round'].max() if not existing_fixtures.empty else 0
     else:
@@ -30,7 +30,7 @@ def run_fpl_pipeline():
         last_fixture_round = 0
 
     if os.path.exists(FPL_PATH):
-        print(f"FPL player data exists.... ")
+        print(f"FPL player data exists!!")
         existing_df = pd.read_parquet(FPL_PATH)
         season_data = existing_df[existing_df['season'] == FPL_SEASON]
         last_saved_round = season_data['round'].max() if not season_data.empty else 0
@@ -53,7 +53,7 @@ def run_fpl_pipeline():
         return
 
     player_map, team_map = get_player_mappings(boot_data)
-    new_fpl_fixtures, fix_id_map = sync_fpl_fixtures(team_map)
+    new_fpl_fixtures, fix_id_map = sync_fpl_fixtures(team_map, FPL_SEASON)
 
     if fixtures_need_update:
         print(f"\n Updating FPL fixture table to GW {max_ready_round}...")
