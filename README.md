@@ -29,14 +29,14 @@ Hello!! This is my first project where I am parallely working on Github. Everybo
 - [x] **Dynamic FDR:** Developed a heuristic scoring model ($0.7 \times \text{Goals Conceded} + 0.3 \times \text{BPS Conceded}$) to replace static 1–5 ratings.
 - [x] **Efficiency Normalization:** Standardized player impact via ICT per 90 metrics, identifying high-upside "super-subs" hidden by low total minutes.
 - [x] **Automated Data Cleaning:** Implemented robust type-casting and `NaN` handling for xG, xA, and ICT indices to ensure model-ready inputs.
-- [ ] **The Interaction Logic:** (In Progress) Finalizing the Opportunity Score ($Player\_Power \times Opponent\_Multiplier$) mapping.
+- [x] **The Interaction Logic:** (In Progress) Finalizing the Opportunity Score ($Player\_Power \times Opponent\_Multiplier$) mapping.
 - [x] **Script Formalization:** Successfully transitioned "Whiteboard" logic from Jupyter into production-grade `.py` modules.
 
 ### Phase 3: Predictive Modeling (The xP Engine)
 
 - [x] **Model Development:** Train a Regression model (e.g., Random Forest or XGBoost) to forecast Expected Points ($xP$).
 
-- [ ] **Feature Importance:** Use the logic from Phase 2 as a primary feature to guide the ML model's learning.
+- [x] **Feature Importance:** Use the logic from Phase 2 as a primary feature to guide the ML model's learning.
 
 - [ ] **Validation:** Back-test the model against previous Gameweeks to measure Mean Absolute Error (MAE).
 
