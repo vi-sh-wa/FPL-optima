@@ -23,6 +23,8 @@ def get_player_history(player_map, season_label, rounds_to_fetch):
                 data = r.json()
                 if 'history' in data:
                     for entry in data['history']:
+                        if entry['round'] is None:
+                            continue
                         if entry['round'] in rounds_to_fetch:
                             entry.update(p_info)
                             entry['season'] = season_label
@@ -63,6 +65,7 @@ def sync_fpl_fixtures(team_map, season_label):
         h_id = fixture['team_h']
         a_id = fixture['team_a']
         fix_id_map[fixture['id']] = (h_id, a_id)
+
 
         if not fixture.get('stats'):
             continue
