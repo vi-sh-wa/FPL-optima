@@ -125,3 +125,29 @@ def fix_player_teams(df, fix_id_map, team_map):
     return df
 
 
+
+
+def get_upcoming_fixtures(team_map, target_round):
+    fixture_url = "https://fantasy.premierleague.com/api/fixtures/"
+    r = requests.get(fixture_url)
+    fixtures_data = r.json()
+
+    next_gw_list = []
+    for f in fixtures_data:
+        if f['event'] == target_round:
+            h_id = f['team_h']
+            a_id = f['team_a']
+            
+            next_gw_list.append({
+                'team_name': team_map.get(h_id),
+                'opponent_name': team_map.get(a_id),
+                'was_home': 1,
+                'round': target_round
+            })
+            next_gw_list.append({
+                'team_name': team_map.get(a_id),
+                'opponent_name': team_map.get(h_id),
+                'was_home': 0,
+                'round': target_round
+            })
+    return pd.DataFrame(next_gw_list)
