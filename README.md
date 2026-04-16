@@ -38,12 +38,12 @@ Hello!! This is my first project where I am parallely working on Github. Everybo
 
 - [x] **Feature Importance:** Use the logic from Phase 2 as a primary feature to guide the ML model's learning.
 
-- [ ] **Validation:** Back-test the model against previous Gameweeks to measure Mean Absolute Error (MAE).
+- [x] **Validation:** Back-test the model against previous Gameweeks to measure Mean Absolute Error (MAE).
 
 ### Phase 4: Prescriptive Optimization (The Solver)
-- [ ] **Lineup Optimization:** Implement a Linear Programming (LP) solver using the PuLP library to maximize $xP$ under budget (£100m) and formation constraints.
+- [x] **Lineup Optimization:** Implement a Linear Programming (LP) solver using the PuLP library to maximize $xP$ under budget (£100m) and formation constraints.
 
-- [ ] **Deployment:** Build an interactive Streamlit Dashboard to visualize the "Optimal 11" and allow users to toggle between "Safe" and "Risky" (Differential) strategies.
+- [ ] **Deployment:** Build an interactive Streamlit Dashboard to visualize the "Best Possible Squad" and allow users to toggle between "Safe" and "Risky" (Differential) strategies.
 
 ---
 
