@@ -15,7 +15,7 @@ def get_fpl_metadata():
 def get_player_history(player_map, season_label, rounds_to_fetch):
     all_new_data = []
 
-    for p_id, p_info in tqdm(player_map.items(), desc="Backfilling FPL Data"):
+    for p_id, p_info in tqdm(player_map.items(), desc="Populating FPL Data"):
         try:
             url = f"https://fantasy.premierleague.com/api/element-summary/{p_id}/"
             r = requests.get(url)
